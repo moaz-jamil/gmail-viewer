@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Gmail Viewer{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    #popup-container {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      z-index: 9999;
+      width: 320px;
+    }
+    .toast {
+      opacity: 1 !important;
+      cursor: pointer;
+    }
+    .notif-badge {
+      position: absolute;
+      top: 4px;
+      right: 2px;
+      background-color: red;
+      color: white;
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 🔔 Popup Container -->
+<div id="popup-container" aria-live="polite" aria-atomic="true"></div>
+
+<!-- 🌐 Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark position-relative">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'home' %}">Home</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto position-relative">
+        <li class="nav-item position-relative">
+          <a class="nav-link" href="{% url 'notifications' %}">
+            🔔 Notifications
+            <span id="notif-count" class="notif-badge d-none">0</span>
+          </a>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">📊 Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'inbox' %}">📥 Inbox</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">🚪 Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- 🧾 Main Content -->
+<main class="container py-4">
+  {% block content %}
+  {% endblock %}
+</main>
+
+<!-- 🦶 Footer -->
+<footer class="bg-light text-center py-3 mt-auto">
+  <small>&copy; 2025 Gmail Viewer App. All rights reserved.</small>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 🔁 Live Notification Script -->
+<script>
+  const displayedNotifs = new Set();  // ✅ Keep track of already shown notification IDs
+
+  function markAsRead(notifId) {
+    fetch('/notifications/mark_read/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: JSON.stringify({ id: notifId })
+    }).then(res => {
+      if (!res.ok) {
+        console.error("Failed to mark notification as read");
+      }
+    });
+  }
+
+  function fetchLiveNotifications() {
+    fetch('/get_unread_notifications/')
+      .then(response => response.json())
+      .then(data => {
+        const notifArea = document.getElementById('popup-container');
+        const notifCount = document.getElementById('notif-count');
+
+        const newNotifs = data.notifications.filter(n => !displayedNotifs.has(n.id));
+        const count = newNotifs.length;
+
+        notifCount.textContent = count;
+        notifCount.classList.toggle('d-none', count === 0);
+
+        newNotifs.forEach(notif => {
+          displayedNotifs.add(notif.id);  // ✅ Mark as shown
+
+          const toast = document.createElement('div');
+          toast.className = 'toast show shadow-sm mb-2';
+          toast.setAttribute('role', 'alert');
+          toast.setAttribute('aria-live', 'assertive');
+          toast.setAttribute('aria-atomic', 'true');
+
+          toast.innerHTML = `
+            <div class="toast-header bg-primary text-white">
+              <strong class="me-auto">${notif.sender}</strong>
+              <small>Just now</small>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+              💬 ${notif.sender} sent you a message.<br>
+              <a href="/notifications/?notif=${notif.id}" class="btn btn-sm btn-outline-primary mt-2">View</a>
+            </div>
+          `;
+
+          // 🔁 Mark as read on close button
+          toast.querySelector('.btn-close').addEventListener('click', () => {
+            markAsRead(notif.id);
+          });
+
+          // 🕐 Auto-hide and mark as read
+          setTimeout(() => {
+            if (toast && toast.parentElement) {
+              toast.remove();
+              markAsRead(notif.id);
+            }
+          }, 5000);
+
+          notifArea.appendChild(toast);
+        });
+      });
+  }
+
+  setInterval(fetchLiveNotifications, 5000);  // 🔁 Fetch every 5 seconds
+</script>
+
+
+</body>
+</html>

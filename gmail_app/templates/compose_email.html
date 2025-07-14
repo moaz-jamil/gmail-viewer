@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Compose Email{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4 text-center">Compose New Email</h2>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="to" class="form-label">To</label>
+            <input type="email" name="to" id="to" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="subject" class="form-label">Subject</label>
+            <input type="text" name="subject" id="subject" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="body" class="form-label">Message</label>
+            <textarea name="body" id="body" rows="6" class="form-control" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Send Email</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Inbox - Gmail Viewer{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4 text-center">📥 Gmail Inbox</h2>
+    <form method="get" action="{% url 'inbox' %}" class="mb-4 d-flex flex-wrap gap-2 justify-content-center">
+    <input type="text" name="query" class="form-control w-50" placeholder="Search your emails..." value="{{ request.GET.query }}">
+        <select name="label" class="form-select w-auto">
+        <option value="">All Labels</option>
+        <option value="INBOX" {% if request.GET.label == "INBOX" %}selected{% endif %}>Inbox</option>
+        <option value="STARRED" {% if request.GET.label == "STARRED" %}selected{% endif %}>Starred</option>
+        <option value="IMPORTANT" {% if request.GET.label == "IMPORTANT" %}selected{% endif %}>Important</option>
+        <option value="CATEGORY_PROMOTIONS" {% if request.GET.label == "CATEGORY_PROMOTIONS" %}selected{% endif %}>Promotions</option>
+        <option value="Trash"  {% if request.GET.label == "Trash" %}selected{% endif %}>Trash</option>
+    </select>
+    
+    <div class="form-check mt-2">
+        <input class="form-check-input" type="checkbox" name="has_attachment" id="has_attachment" {% if request.GET.has_attachment %}checked{% endif %}>
+        <label class="form-check-label" for="has_attachment">Has Attachment</label>
+    </div>
+
+    <button type="submit" class="btn btn-outline-primary mt-2">Search</button>
+    </form>
+
+
+
+    {% if messages %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Sender</th>
+                        <th scope="col">Subject</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Snippet</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for msg in messages %}
+                        <tr>
+                            <td>{{ msg.sender }}</td>
+                            <td>{{ msg.subject }}</td>
+                            <td>{{ msg.date }}</td>
+                            <td>{{ msg.snippet|truncatechars:100 }}</td>
+                            <td>
+                                <a href="{% url 'view_email' msg.id %}?user={{ msg.sender_user.id }}" class="btn btn-sm btn-info">View</a>
+
+                            </td>
+                        </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+         
+
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            No emails found in your inbox.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

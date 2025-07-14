@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">📊 Gmail Dashboard</h2>
+
+    <!-- 🔔 Unread Email Summary -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <span>📩 Unread Emails</span>
+            <button class="btn btn-light btn-sm" onclick="toggleEmails()">Show</button>
+        </div>
+        <div class="card-body" id="unreadBox" style="display: none;">
+            {% if unread_emails %}
+                <p>You have <strong>{{ unread_count }}</strong> unread emails:</p>
+                <ul class="list-group">
+                    {% for email in unread_emails %}
+<li class="list-group-item">
+    <strong>📧 From:</strong> {{ email.from }} <br>
+    <strong>📝 Subject:</strong> {{ email.subject }} <br>
+    <strong>📅 Date:</strong> {{ email.date }} <br>
+    <strong>📰 Snippet:</strong> 
+    <span id="snippet-{{ forloop.counter }}">
+        {{ email.snippet|truncatechars:100 }}
+        {% if email.snippet|length > 100 %}
+            ... <a href="javascript:void(0);" onclick="toggleReadMore({{ forloop.counter }})">Read more</a>
+        {% endif %}
+    </span>
+    <span id="full-{{ forloop.counter }}" style="display: none;">
+        {{ email.snippet }} <a href="javascript:void(0);" onclick="toggleReadLess({{ forloop.counter }})">Read less</a>
+    </span>
+</li>
+{% endfor %}
+
+                </ul>
+            {% else %}
+                <p>No unread emails 🎉</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 👤 Recent Login Activity -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">🧑‍💻 Recent Logins</div>
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Email</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in login_logs %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ log.user_email }}</td>
+                    <td>{{ log.login_time }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 🔻 Scripts -->
+<script>
+function toggleEmails() {
+    const unreadBox = document.getElementById("unreadBox");
+    const btn = event.target;
+    if (unreadBox.style.display === "none") {
+        unreadBox.style.display = "block";
+        btn.textContent = "Hide";
+    } else {
+        unreadBox.style.display = "none";
+        btn.textContent = "Show";
+    }
+}
+
+function toggleReadMore(id) {
+    document.getElementById('snippet-' + id).style.display = 'none';
+    document.getElementById('full-' + id).style.display = 'inline';
+}
+
+function toggleReadLess(id) {
+    document.getElementById('full-' + id).style.display = 'none';
+    document.getElementById('snippet-' + id).style.display = 'inline';
+}
+</script>
+{% endblock %}

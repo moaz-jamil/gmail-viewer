@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block title %}🔔 Notifications{% endblock %}
+
+{% block content %}
+<h4 class="text-center mb-4 fw-bold">🔔 Notifications + Thread View</h4>
+
+<div class="container mt-3">
+  <div class="row g-4">
+    
+    <!-- LEFT: Email Thread -->
+    <div class="col-md-8">
+      <div class="card border-secondary shadow-sm" style="height: 600px; overflow-y: auto;">
+        <div class="card-body">
+          {% if thread_messages %}
+            <div class="mb-3 text-muted">
+              <div><strong>From:</strong> {{ thread_messages.0.from }}</div>
+              <div><strong>To:</strong> {{ thread_messages.0.to }}</div>
+              <div><strong>Subject:</strong> {{ thread_messages.0.subject }}</div>
+              <div><strong>Date:</strong> {{ thread_messages.0.date }}</div>
+            </div>
+            <hr>
+
+            {% for msg in thread_messages %}
+              <div class="mb-4">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                       style="width: 36px; height: 36px; font-weight: bold;">
+                    {{ msg.from|slice:":1"|upper }}
+                  </div>
+                  <div>
+                    <strong>{{ msg.from }}</strong><br>
+                    <small class="text-muted">{{ msg.date }}</small>
+                  </div>
+                </div>
+                <div class="ms-5" style="white-space: pre-wrap;">{{ msg.body|linebreaksbr }}</div>
+              </div>
+              {% if not forloop.last %}<hr>{% endif %}
+            {% endfor %}
+
+            {% if replies %}
+              <hr class="my-3">
+              <h6 class="text-muted">📜 Previous Replies:</h6>
+              <ul class="list-group mt-2">
+                {% for reply in replies %}
+                  <li class="list-group-item small">
+                    <strong>{{ reply.sender }}</strong>
+                    <span class="text-muted float-end">{{ reply.sent_at }}</span>
+                    <p class="mb-1 mt-2">{{ reply.body }}</p>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          {% else %}
+            <p class="text-muted">No thread selected.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Chat Box -->
+    <div class="col-md-4">
+      <div class="card border-secondary shadow-sm d-flex flex-column" style="height: 600px;">
+        <div class="card-body d-flex flex-column">
+          <div class="fw-semibold mb-2">
+            {% if selected_user %}
+              Chatting with <span class="text-primary">@{{ selected_user.username }}</span>
+            {% else %}
+              <span class="text-muted">No chat selected</span>
+            {% endif %}
+          </div>
+
+          <!-- USER DROPDOWN -->
+          <form method="get" action="{% url 'notifications' %}" class="mb-3">
+            <select name="notif" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">-- Select Notification --</option>
+              {% for n in unique_notifs %}
+                <option value="{{ n.id }}" {% if selected_notif and selected_notif.id == n.id %}selected{% endif %}>
+                  {{ n.sender.username }}
+                </option>
+              {% endfor %}
+            </select>
+          </form>
+
+          <!-- CHAT MESSAGES -->
+         <div id="chatBox" class="px-1 mb-2"
+     style="border-top: 1px solid #eee; font-size: 0.9rem; height: 400px; overflow-y: auto;">
+            {% if messages %}
+              {% for msg in messages %}
+                {% if msg.sender == request.user %}
+                  <div class="d-flex justify-content-end mt-2">
+                    <div class="p-2 rounded-3 shadow-sm" style="max-width: 70%; background-color: #dcf8c6;">
+                      <div>{{ msg.message }}</div>
+                      <div class="text-end text-muted small">{{ msg.timestamp|date:"H:i" }}</div>
+                    </div>
+                  </div>
+                {% else %}
+                  <div class="d-flex justify-content-start mt-2">
+                    <div class="p-2 rounded-3 shadow-sm border" style="max-width: 70%; background-color: #f1f0f0;">
+                      <div>{{ msg.message }}</div>
+                      <div class="text-start text-muted small">{{ msg.timestamp|date:"H:i" }}</div>
+                    </div>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <div class="text-center text-muted mt-3">No messages yet.</div>
+            {% endif %}
+          </div>
+
+          <!-- CLEAR CHAT -->
+          {% if selected_user and db_thread %}
+            <form id="clearChatForm" method="POST" class="text-end mb-2">
+              {% csrf_token %}
+              <input type="hidden" name="thread_id" value="{{ db_thread.gmail_id }}">
+              <button type="submit" class="btn btn-sm btn-danger">🧹 Clear Chat</button>
+            </form>
+          {% endif %}
+
+          <!-- SEND MESSAGE -->
+          {% if selected_user and db_thread %}
+            <form action="{% url 'send_message' %}" method="POST" class="d-flex mt-1">
+              {% csrf_token %}
+              <input type="hidden" name="to_id" value="{{ selected_user.id }}">
+              <input type="hidden" name="thread_id" value="{{ db_thread.gmail_id }}">
+              <input type="text" name="message" class="form-control form-control-sm me-2" placeholder="Type a message..." required>
+              <button class="btn btn-primary btn-sm" type="submit">Send</button>
+            </form>
+          {% else %}
+            <div class="text-muted small mt-2">⚠️ Select a notification to chat.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Clear Chat AJAX -->
+<script>
+document.getElementById('clearChatForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const form = e.target;
+  const formData = new FormData(form);
+
+  fetch("{% url 'clear_chat' %}", {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}'
+    },
+    body: formData
+  }).then(res => res.json())
+    .then(data => {
+      if (data.status === 'success') {
+        location.reload();
+      }
+    });
+});
+</script>
+{% endblock %}

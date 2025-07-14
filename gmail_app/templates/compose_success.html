@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Email Sent{% endblock %}
+
+{% block content %}
+<div class="container my-5 text-center">
+    <h3 class="text-success">✅ Email successfully sent to {{ to }}!</h3>
+    <a href="{% url 'compose' %}" class="btn btn-primary mt-3">Send Another</a>
+</div>
+{% endblock %}
