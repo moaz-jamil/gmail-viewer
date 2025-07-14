@@ -27,4 +27,5 @@ This Django-based web application allows users to:
 ### 1. Clone the repository or unzip the folder
 
 
-git clone https://github.com/moaz-jamil/.git
+git clone https://github.com/moaz-jamil/gmail-viewer.git
+cd gmail-viewer
