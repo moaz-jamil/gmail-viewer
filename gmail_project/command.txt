@@ -1,0 +1,18 @@
+hassan.enterprises.co@gmail.com
+
+Commands:
+1.
+python manage.py makemigrations
+Description: Creates migration files based on the changes you made to your models.
+
+2.
+python manage.py migrate
+Description: Applies database migrations, creating or updating tables as needed.
+
+3.
+python manage.py runserver
+Description: Go to any browser and paste(http://127.0.0.1:8000/) this 
+
+4.
+python manage.py runserver
+Description: Admin panel
