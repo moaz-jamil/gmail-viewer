@@ -4,7 +4,7 @@ This Django-based web application allows users to:
 - 📥 View their Gmail inbox using the Gmail API
 - 🧵 Read full email threads
 - 💬 Chat with other users in real-time (thread-specific)
-- 🏷️ Mention users using `@username`
+- 🏷️ Mention users using `@username` in just inbox to reply the email
 - 🔔 Receive real-time popup notifications on new messages
 - 📜 View email replies, tags, and notification threads
 
